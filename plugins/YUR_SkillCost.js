@@ -82,7 +82,7 @@ Youri.Param = Youri.Param || {};
 Youri.Param.skillCost = {};
 Youri.skillCost = {};
 
-Youri.Param.SkillCost = function Parse( object ) {try { object = JSON.parse( object );} catch (e) { object = object;} finally {if ( Array.isArray( object ) ) { var l = object.length; for ( var i = 0; i < l; i++ ) { object[i] = Parse( object[i] ); };} else if ( typeof object === 'object' ) { for ( var key in object ) { object[key] = Parse( object[key] ); }; }}return object;}(PluginManager.parameters('YUR_Prefix'))
+Youri.Param.skillCost = function Parse( object ) {try { object = JSON.parse( object );} catch (e) { object = object;} finally {if ( Array.isArray( object ) ) { var l = object.length; for ( var i = 0; i < l; i++ ) { object[i] = Parse( object[i] ); };} else if ( typeof object === 'object' ) { for ( var key in object ) { object[key] = Parse( object[key] ); }; }}return object;}(PluginManager.parameters('YUR_SkillCost'));
 
 
 (function() {
@@ -94,14 +94,14 @@ Youri.Param.SkillCost = function Parse( object ) {try { object = JSON.parse( obj
             return skill.meta.skillHpCost;
         } else {
             return 0;
-        }
+        };
     }; 
 
     var Game_BattlerBase_prototype_skillMpCost = Game_BattlerBase.prototype.skillMpCost;
     Game_BattlerBase.prototype.skillMpCost = function(skill) {
         var cost = Game_BattlerBase_prototype_skillMpCost.call(this, skill);
         if (!isNaN(Number(skill.meta.skillMpCost))) {
-            cost += Math.floor(Number(skill.meta.skillMpCost) * this.mcr)
+            cost += Math.floor(Number(skill.meta.skillMpCost) * this.mcr);
         }
         return cost;
     };
@@ -110,8 +110,8 @@ Youri.Param.SkillCost = function Parse( object ) {try { object = JSON.parse( obj
     Game_BattlerBase.prototype.skillTpCost = function(skill) {
         var cost = Game_BattlerBase_prototype_skillTpCost.call(this, skill);
         if (!isNaN(Number(skill.meta.skillTpCost))) {
-            cost += Number(skill.meta.skillTpCost)
-        }
+            cost += Number(skill.meta.skillTpCost);
+        };
         return cost;
     };
 
@@ -120,7 +120,7 @@ Youri.Param.SkillCost = function Parse( object ) {try { object = JSON.parse( obj
             return String(skill.meta.skillConditionEval);
         } else {
             return "true";
-        }
+        };
     };
     
     Game_BattlerBase.prototype.skillCostEval_YUR = function(skill) {
@@ -128,41 +128,41 @@ Youri.Param.SkillCost = function Parse( object ) {try { object = JSON.parse( obj
             return String(skill.meta.skillCostEval);
         } else {
             return "true";
-        }
+        };
     };
     
     var Game_BattlerBase_prototype_canPaySkillCost = Game_BattlerBase.prototype.canPaySkillCost;
     Game_BattlerBase.prototype.canPaySkillCost = function(skill) {
         var condition = Game_BattlerBase_prototype_canPaySkillCost.call(this, skill);
         var skillEval = true;
-        var hpCost = (Youri.Param.SkillCost.HpCost)? this._hp >= this.skillHpCost_YUR(skill): true
+        var hpCost = (Youri.Param.skillCost.HpCost)? this._hp >= this.skillHpCost_YUR(skill): true;
         try {
-            skillEval = eval(this.skillConditionEval_YUR(skill))
+            skillEval = eval(this.skillConditionEval_YUR(skill));
         } catch(e) {
-            console.error(`skillConditionEval 오류, 스킬 번호: ${skill.id}`)
+            console.error(`skillConditionEval 오류, 스킬 번호: ${skill.id}`);
         };
         
         return condition && skillEval && hpCost;
         
-    }
+    };
 
     var Game_BattlerBase_prototype_paySkillCost = Game_BattlerBase.prototype.paySkillCost;
     Game_BattlerBase.prototype.paySkillCost = function(skill) {
         Game_BattlerBase_prototype_paySkillCost.call(this, skill);
         try {
-            eval(this.skillCostEval_YUR(skill))
+            eval(this.skillCostEval_YUR(skill));
         } catch(e) {
-            console.error(`skillCostEval 오류, 스킬 번호: ${skill.id}`)
+            console.error(`skillCostEval 오류, 스킬 번호: ${skill.id}`);
         };
-        var hp = this._hp - this.skillHpCost_YUR(skill)
-        this._hp = (hp > 0)? hp : (Youri.Param.SkillCost.HpCostDead? 0: 1);
+        var hp = this._hp - this.skillHpCost_YUR(skill);
+        this._hp = (hp > 0)? hp : (Youri.Param.skillCost.HpCostDead? 0: 1);
     };
 
     // ==================================
     // Window_SkillList
     // =================================
-    if (!Youri.Param.SkillCost.SkillListDisable) {
-        if (!Youri.Param.SkillCost.SkillList) {
+    if (!Youri.Param.skillCost.SkillListDisable) {
+        if (!Youri.Param.skillCost.SkillList) {
             Window_SkillList.prototype.drawSkillCost = function(skill, x, y, width) {
                 let hpCost = this._actor.skillHpCost_YUR(skill);
                 let tpCost = this._actor.skillTpCost(skill);
@@ -178,20 +178,20 @@ Youri.Param.SkillCost = function Parse( object ) {try { object = JSON.parse( obj
                     this.drawText(`${mpCost}`, x - tpSpacing, y, width, 'right');
                 }
                 if (hpCost > 0) {
-                    this.changeTextColor(Youri.Param.SkillCost.HpCostColor);
+                    this.changeTextColor(Youri.Param.skillCost.HpCostColor);
                     this.drawText(`${hpCost}`, x - mpSpacing - tpSpacing, y, width, 'right');
-                }
+                };
             };
         } else {
             var Window_SkillList_prototype_drawSkillCost = Window_SkillList.prototype.drawSkillCost;
             Window_SkillList.prototype.drawSkillCost = function(skill, x, y, width) {
                 if (this._actor.skillHpCost_YUR(skill) > 0) {
-                    this.changeTextColor(Youri.Param.SkillCost.HpCostColor);
+                    this.changeTextColor(Youri.Param.skillCost.HpCostColor);
                     this.drawText(this._actor.skillHpCost_YUR(skill), x, y, width, 'right');
                 } else {
                     Window_SkillList_prototype_drawSkillCost.call(this, skill, x, y, width);
-                }
-            }
-        }
-    }
+                };
+            };
+        };
+    };
 })();
