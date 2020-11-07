@@ -8,4 +8,4 @@ your0501(youri1)
 상업 또는 비영리
 
 # 라이선스
-MIT 라이선스
+MIT License
