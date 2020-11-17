@@ -171,6 +171,7 @@ Youri.Param.skillCost = function Parse( object ) {try { object = JSON.parse( obj
     // =================================
     if (!Youri.Param.skillCost.SkillListDisable) {
         if (!Youri.Param.skillCost.SkillList) {
+            Window_SkillList.prototype.drawSkillCost = function(skill, x, y, width) {
                 let hpCost = this._actor.skillHpCost_YUR(skill);
                 let tpCost = this._actor.skillTpCost(skill);
                 let mpCost = this._actor.skillMpCost(skill);
