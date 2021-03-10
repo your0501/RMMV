@@ -88,81 +88,222 @@ Window_ShopBuy.prototype.windowWidth = function() {
 // Window_EquipCommand
 // ===============
 
+class Window_EquipCommandVertical extends Window_Command {
+    initialize(x, y, width) {
+        super.initialize(x, y);
+        this._windowWidth = width;
+    }
 
+    windowWidth() {
+        return this._windowWidth;
+    }
 
+    numVisibleRows() {
+        return 4;
+    }
 
-function Window_EquipCommandVertical() {
-    this.initialize.apply(this, arguments);
+    makeCommandList() {
+        this.addCommand(TextManager.equip2,   'equip');
+        this.addCommand(TextManager.optimize, 'optimize');
+        this.addCommand(TextManager.clear,    'clear');
+    }
 }
-
-Window_EquipCommandVertical.prototype = Object.create(Window_Command.prototype);
-Window_EquipCommandVertical.prototype.constructor = Window_EquipCommandVertical;
-
-Window_EquipCommandVertical.prototype.initialize = function(x, y, width) {
-    this._windowWidth = width;
-    Window_Command.prototype.initialize.call(this, x, y);
-};
-
-Window_EquipCommandVertical.prototype.windowWidth = function() {
-    return this._windowWidth;
-};
-
-Window_EquipCommandVertical.prototype.numVisibleRows = function() {
-    return 4;
-};
-
-Window_EquipCommandVertical.prototype.makeCommandList = function() {
-    this.addCommand(TextManager.equip2,   'equip');
-    this.addCommand(TextManager.optimize, 'optimize');
-    this.addCommand(TextManager.clear,    'clear');
-};
 
 
 // =======================================
 // Window_SkillStatusSmall
 // =======================================
 
-function Window_SkillStatusSmall() {
-    this.initialize.apply(this, arguments);
-}
-
-Window_SkillStatusSmall.prototype = Object.create(Window_SkillStatus.prototype);
-Window_SkillStatusSmall.prototype.constructor = Window_SkillStatusSmall;
-
-Window_SkillStatusSmall.prototype.initialize = function(x, y, width, height) {
-    Window_Base.prototype.initialize.call(this, x, y, width, height);
-    this._actor = null;
-};
 
 
-Window_SkillStatusSmall.prototype.refresh = function() {
-    this.contents.clear();
-    if (this._actor) {
-        
-        var w = this.width - this.padding * 2;
-        var h = this.height - this.padding * 2;
-        var y = 0; // 2 - this.lineHeight() * 1.5;
-        var x = 0;//w - 162 - this.textPadding();
-        
-        var actor = this._actor;
-        var lineHeight = this.lineHeight()
-        
-        this.drawActorFace (actor, 0, 0, 144, h);
-        
-        this.drawActorName (actor, x, y + lineHeight * 0);
-        this.drawActorIcons(actor, x, y + lineHeight * 1);
-        this.drawActorHp   (actor, x, y + lineHeight * 2, w);
-        this.drawActorMp   (actor, x, y + lineHeight * 3, w);
+class Window_SkillStatusSmall extends Window_SkillStatus {
+
+    initialize(x, y, width, height) {
+        Window_Base.prototype.initialize.call(this, x, y, width, height);
+        this._actor = null;
     }
-};
 
+    setActor(actor) {
+        if (this._actor !== actor) {
+            this._actor = actor;
+            this.refresh();
+        }
+    }
 
+    refresh() {
+        this.contents.clear();
+        if (this._actor) {
+            const w = this.width - this.padding * 2;
+            const h = this.height - this.padding * 2;
+            const x = 0;
+            const y = 0;
+
+            const actor = this._actor;
+            const lineHeight = this.lineHeight()
+            
+            this.drawActorFace (actor, 0, 0, 144, h);
+            this.drawActorName (actor, x, y + lineHeight * 0);
+            this.drawActorIcons(actor, x, y + lineHeight * 1);
+            this.drawActorHp   (actor, x, y + lineHeight * 2, w);
+            this.drawActorMp   (actor, x, y + lineHeight * 3, w);
+        }
+    }
+}
 
 // =======================================
 // Window_HelpExtra
 // =======================================
 
+class _Window_HelpExtra extends Window_Help {
+    standardFontSize() { return 20 }
 
+    makeFontBigger() {
+        if (this.contents.fontSize <= 64) {
+            this.contents.fontSize += 4;
+        }
+    }
+
+    makeFontSmaller() {
+        if (this.contents.fontSize >= 8) {
+            this.contents.fontSize -= 4;
+        }
+    }
+
+    initialize(x, y, w, h) {
+        const ww = w || Graphics.boxWidth / 2;
+        const hh = h || Graphics.boxHeight;
+        const xx = w || width;
+        const yy = y || 0;
+        Window_Base.prototype.initialize.call(this, xx, yy, ww, hh);
+        this._text = '';
+    }
+
+    setText(text) {
+        if (this._text !== text) {
+            var text = text.replace(/\\n/g, '\n');
+            this._text = text;
+            this.refresh();
+        }
+    }
+
+    refresh() {
+        this.contents.clear();
+        this.drawTextEx(this._text, 0, 0);
+    }
+
+    setItem(item) {
+        this.setText(item ? this.makeToolTip(item) : '');
+    }
+
+    getDescription(item) {
+        const note = item.note;
+        const re = /<desc>\n(.*)\n<\/desc>/gis
+        const match = re.exec(note);
+        return match ? match[1] : item.description
+    }
+
+    makeToolTip(item) {
+        var description = this.getDescription(item) + "\n\n";
+        
+        if (DataManager.isWeapon(item)) {
+
+            description += this.makeWeaponDetail(item);
+            description += this.makeItemDetail(item);
+
+        } else if (DataManager.isArmor(item)) {
+
+            description += this.makeArmorDetail(item)
+            description += this.makeItemDetail(item);
+        }
+        
+        return description;
+    }
+
+
+    makeWeaponDetail(item) {
+        var description = "";
+        description += `${item.meta.reqLevel? `요구 레벨: ${item.meta.reqLevel}\n`: ""}`
+        description += `무기분류: ${$dataSystem.weaponTypes[item.wtypeId]}\n`
+        return description;
+    }
+
+    makeArmorDetail(item) {
+        var description = "";
+        description += `${item.meta.reqLevel? `요구 레벨: ${item.meta.reqLevel}\n`: ""}`
+        description += `장비분류: ${$dataSystem.armorTypes[item.atypeId]}\n`
+        description += `장착위치: ${$dataSystem.equipTypes[item.etypeId]}\n`
+        return description;
+    }
+
+    processNormalCharacter(textState) {
+        var c = textState.text[textState.index++];
+        var w = this.textWidth(c);
+        this.contents.drawText(c, textState.x, textState.y, w * 2, textState.height);
+        textState.x += w;
+        if (this.width - (this.standardPadding()) * 2  - w <= textState.x) {
+            textState.x = textState.left;
+            textState.height = this.calcTextHeight(textState, false);
+            textState.y += this.contents.fontSize + 8;
+        }
+    }
+
+
+    makeItemDetail(item) {
+        var description = "";
+        description += `${item.meta.detail? item.meta.detail + "\n" : ""}`
+
+
+
+        var paramPlus = item.NIP? item.NIP.paramPlus : []
+        var paramBase = item.NIP? item.NIP.paramBase: item.params
+
+        for (var [index, value] of paramBase.entries()) {
+
+            if (value !== 0) { 
+                var random = item.meta["paramRandom"+index] || 0;
+                
+                description += `${TextManager.param(index)}: ${(value < 0)? "" : "+"}${value}`
+                if (random) {
+                    description += `\\c[24]${(random < 0)? "" : "+"}${Math.randomInt(random)}\\c[0]`
+                }
+                //console.log(paramPlus)
+                if (paramPlus[index]) {
+                    description += `\\c[4]${(random < 0)? "" : "+"}${paramPlus[index]}\\c[0]`
+                }
+                description += "\n"
+            }
+        }
+        for (var index in item.traits) {
+            var trait = item.traits[index]
+            if (trait.code == 21 && trait.value != 0) {
+                description += `${TextManager.param(trait.dataId)}: ${(trait.value < 0)? "" : "*"}${Math.round(trait.value*400)/4}%\n`
+            }
+            else if (trait.code == 22 && trait.value != 0) {
+                description += `${TextManager.xparam(trait.dataId)}: ${(trait.value < 0)? "" : "+"}${Math.round(trait.value*400)/4}%\n`
+            }
+            else if (trait.code == 23 && trait.value != 1) {
+                description += `${TextManager.sparam(trait.dataId)}: ${(trait.value < 0)? "" : "*"}${Math.round(trait.value*400)/4}%\n`
+            }
+        }
+        return description;
+    }
+
+
+
+
+}
+
+TextManager.xparam = function(paramId) {
+    return ["명중률", "회피율", "치명타 확률", "치명 회피율", "마법 회피율", "마법 반사 확률", "공격 반사 확률", "HP 재생률", "MP 재생률", "TP 재생률"][paramId] || '';
+};
+
+TextManager.sparam = function(paramId) {
+    return ["피공격률", "보호 효과율", "회복 효과율", "포션 회복률", "MP 소비율", "TP 충전률", "물리 피해율", "마법 피해율", "바닥 피해율", "경험치 획득률"][paramId] || '';
+};
+
+
+
+/*
 function Window_HelpExtra() {
     this.initialize.apply(this, arguments);
 }
@@ -214,15 +355,6 @@ Window_HelpExtra.prototype.refresh = function() {
 };
 
 
-/*
-Window_HelpExtra.prototype.update = function() {
-    Window_Base.prototype.update.call(this);
-    if (Graphics.frameCount % 10 == 0 && this._isUpdating) {
-        if (this._item) {this.setText(this._item ? (this.makeToolTip(this._item)) : '');}
-
-    }
-};
-*/
 
 Window_HelpExtra.prototype.setItem = function(item) {
     //this._item = item;
@@ -337,10 +469,9 @@ Window_HelpExtra.prototype.processNormalCharacter = function(textState) {
         textState.height = this.calcTextHeight(textState, false);
         textState.y += this.contents.fontSize + 8;
     }
-    
 };
 
-
+*/
 
 // =======================================
 // Scene_Item
